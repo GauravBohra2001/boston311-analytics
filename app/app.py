@@ -4,6 +4,7 @@ import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from uuid import uuid4
 
 # ============================================================
 # Page config + lightweight styling
@@ -12,6 +13,12 @@ st.set_page_config(page_title="Boston 311 Analytics (2024)", layout="wide")
 st.title("Boston 311 Analytics (2024)")
 st.caption("Data source: Boston 311 (2024). Last refreshed: March 2026.")
 
+# ------------------------------------------------------------
+# Session ID (unique per browser session)
+# ------------------------------------------------------------
+if "sid" not in st.session_state:
+    st.session_state["sid"] = str(uuid4())
+    
 # Optional: keep charts readable
 alt.data_transformers.disable_max_rows()
 
@@ -55,15 +62,27 @@ def get_user_agent() -> str:
     except Exception:
         return ""
 
+# def log_page_view(page: str, zip_selected: str | None = None):
+#     # never break app if logging fails
+#     try:
+#         exec_sql(
+#             """
+#             INSERT INTO public.page_views(page, zip_selected, user_agent)
+#             VALUES (%s, %s, %s)
+#             """,
+#             (page, zip_selected, get_user_agent()),
+#         )
+#     except Exception:
+#         pass
+
 def log_page_view(page: str, zip_selected: str | None = None):
-    # never break app if logging fails
     try:
         exec_sql(
             """
-            INSERT INTO public.page_views(page, zip_selected, user_agent)
-            VALUES (%s, %s, %s)
+            INSERT INTO public.page_views(page, zip_selected, user_agent, session_id)
+            VALUES (%s, %s, %s, %s)
             """,
-            (page, zip_selected, get_user_agent()),
+            (page, zip_selected, get_user_agent(), st.session_state.get("sid")),
         )
     except Exception:
         pass
