@@ -68,6 +68,13 @@ def log_page_view(page: str, zip_selected: str | None = None):
     except Exception:
         pass
 
+def log_once(page: str, zip_selected: str | None = None):
+    key = f"logged::{page}::{zip_selected or 'null'}"
+    if st.session_state.get(key):
+        return
+    st.session_state[key] = True
+    log_page_view(page, zip_selected)
+
 # ============================================================
 # KPI helpers
 # ============================================================
@@ -193,7 +200,8 @@ def info_block_zip(zip_code: str):
 # Page 1: City Overview
 # ============================================================
 if page == "City Overview (2024)":
-    log_page_view("city_overview", None)
+    #log_page_view("city_overview", None)
+    log_once("city_overview", None)
     info_block_city()
 
     city = fetch_df(
@@ -262,7 +270,8 @@ if page == "City Overview (2024)":
 # ============================================================
 else:
     # Track ZIP selection + page view
-    log_page_view("find_my_area", str(selected_zip))
+    #log_page_view("find_my_area", str(selected_zip))
+    log_once("find_my_area", str(selected_zip))
     info_block_zip(str(selected_zip))
 
     # Query only what you need for speed
