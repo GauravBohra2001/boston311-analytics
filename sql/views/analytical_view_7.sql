@@ -1,0 +1,28 @@
+CREATE OR ALTER VIEW dbo.v_kpi_monthly_city_2024 AS
+WITH base AS (
+  SELECT
+    open_month,
+    is_open,
+    is_closed,
+    resolution_hours,
+    sla_eligible,
+    sla_met,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY resolution_hours)
+      OVER (PARTITION BY open_month) AS median_resolution_hours
+  FROM dbo.v_cases_enriched_2024
+  WHERE location_zipcode IS NOT NULL
+)
+SELECT
+  open_month,
+  COUNT(*) AS total_requests,
+  SUM(is_open) AS open_requests,
+  SUM(is_closed) AS closed_requests,
+  MAX(median_resolution_hours) AS median_resolution_hours,
+  SUM(CASE WHEN sla_eligible = 1 THEN 1 ELSE 0 END) AS sla_eligible_cases,
+  CAST(
+    AVG(CASE WHEN sla_met IS NULL THEN NULL ELSE CAST(sla_met AS float) END)
+    AS float
+  ) AS sla_met_rate
+FROM base
+GROUP BY open_month;
+GO
