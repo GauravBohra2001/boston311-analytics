@@ -69,7 +69,7 @@ A dedicated date table was used (or auto-generated via Power BI) to:
 - Ensure consistent month-based aggregations
 
 Month-level aggregation was later mirrored in PostgreSQL using:
-```sql
+sql
 date_trunc('month', open_date)
 
 
@@ -169,4 +169,4 @@ The Power BI model informed:
 - SLA eligibility calculation
 
 This ensured consistency between BI tool logic and database logic.
-```
+
