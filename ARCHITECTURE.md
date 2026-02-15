@@ -1,7 +1,9 @@
 ```markdown
 # Architecture Documentation
 
-```
+## Architecture Flow
+
+```text
 Boston 311 (2024 CSV)
         |
         v
@@ -17,7 +19,9 @@ VM + Power BI (semantic modeling)
 Supabase (PostgreSQL hosting)
         |
         v
-Analytical Views (v_kpi_monthly_city_2024, v_kpi_monthly_zip_2024)
+Analytical Views
+  - v_kpi_monthly_city_2024
+  - v_kpi_monthly_zip_2024
         |
         v
 Streamlit App (app/app.py)
