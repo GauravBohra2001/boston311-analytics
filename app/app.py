@@ -359,6 +359,11 @@ else:
     k5.metric("ZIP SLA Δ vs City (last)", f"{delta_pct:.1f}%" if delta_pct is not None else "—")
     k6.metric("SLA Met Rate (City)", fmt_pct(city_sla, 1))
 
+    # SLA edge case: if there are no SLA-eligible cases, SLA rate will be null/—
+    sla_eligible_sum = pd.to_numeric(zip_kpi["sla_eligible_cases"], errors="coerce").fillna(0).sum()
+    if sla_eligible_sum == 0:
+        st.caption("Note: No SLA-eligible cases in the selected months for this ZIP, so SLA rate is shown as —.")
+
     # Trend prep
     zip_kpi["YearMonth"] = zip_kpi["open_month"].dt.strftime("%Y-%m")
     city["YearMonth"] = city["open_month"].dt.strftime("%Y-%m")
@@ -565,5 +570,8 @@ with st.expander("How is Risk Classification calculated?"):
 - Comparison benchmark = city-wide weighted SLA.
     """)
 
+
 st.markdown("---")
-st.caption("Built by Gaurav Bohra | Data Engineering & Analytics Project")
+st.caption("Built by Gaurav Bohra • Data Engineering & Analytics Project")
+st.caption("Data source: Boston 311 (2024) • Last refreshed: March 2026")
+st.caption("GitHub: https://github.com/GauravBohra2001/boston311-analytics")

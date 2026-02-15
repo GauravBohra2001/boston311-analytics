@@ -6,6 +6,25 @@ Production-style analytics system for analyzing Boston 311 service performance i
 
 **[Live Application](https://boston311-analytics-o6zfms45ffeyrhnsxxdyds.streamlit.app)**
 
+## Screenshots
+
+### City Overview (Full Year)
+![City Overview YTD](docs/assets/city_overview_ytd.png)
+
+### City Overview (Single Month Filter)
+![City Overview Single Month](docs/assets/city_overview_single_month.png)
+
+### Find My Area (ZIP Comparison)
+![Find My Area ZIP](docs/assets/find_my_area_zip.png)
+
+---
+
+### Power BI Semantic Model
+![Power BI Semantic Model](docs/assets/powerbi_semantic_model.png)
+
+### Power BI Dashboard
+![Power BI Dashboard](docs/assets/powerbi_dashboard.png)
+
 ## Problem
 
 City 311 data is large, messy, and difficult to interpret at scale. This system answers:
@@ -74,3 +93,16 @@ source .venv/bin/activate
 pip install -r app/requirements.txt
 streamlit run app/app.py
 ```
+## Deployment Notes
+
+- Requires PostgreSQL views to be created (see /sql and /sql/views)
+- Database hosted on Supabase
+- Secrets managed via Streamlit Cloud
+- No credentials stored in repository
+
+## Documentation
+
+- [Architecture](ARCHITECTURE.md)
+- [Security](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+- [Power BI Semantic Model Details](SEMANTIC_MODEL.md)
