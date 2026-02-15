@@ -1,4 +1,4 @@
-```markdown
+
 # Power BI Semantic Modeling Layer
 
 Before building the hosted Streamlit application, a semantic model was created in Power BI.
@@ -71,7 +71,7 @@ A dedicated date table was used (or auto-generated via Power BI) to:
 Month-level aggregation was later mirrored in PostgreSQL using:
 ```sql
 date_trunc('month', open_date)
-```
+
 
 This allowed seamless migration of logic from Power BI to SQL views.
 
