@@ -1,4 +1,3 @@
-```markdown
 # Security Considerations
 
 ## Secrets Management
@@ -30,4 +29,3 @@
 - No raw dataset downloads exposed
 - Aggregated metrics only
 - No sensitive fields retained
-```
