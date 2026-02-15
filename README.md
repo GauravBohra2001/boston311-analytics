@@ -8,14 +8,17 @@ Production-style analytics system for analyzing Boston 311 service performance i
 
 ## Screenshots
 
-### City Overview (Full Year)
-![City Overview YTD](docs/assets/city_overview_ytd.png)
+### City Overview
+![City Overview](docs/assets/city_overview_1.png)
 
-### City Overview (Single Month Filter)
-![City Overview Single Month](docs/assets/city_overview_single_month.png)
+### Find My Area – View 1
+![Find My Area 1](docs/assets/find_my_area_1.png)
 
-### Find My Area (ZIP Comparison)
-![Find My Area ZIP](docs/assets/find_my_area_zip.png)
+### Find My Area – View 2
+![Find My Area 2](docs/assets/find_my_area_2.png)
+
+### Find My Area – View 3
+![Find My Area 3](docs/assets/find_my_area_3.png)
 
 ---
 
@@ -23,7 +26,9 @@ Production-style analytics system for analyzing Boston 311 service performance i
 ![Power BI Semantic Model](docs/assets/powerbi_semantic_model.png)
 
 ### Power BI Dashboard
-![Power BI Dashboard](docs/assets/powerbi_dashboard.png)
+![Power BI Dashboard 1](docs/assets/powerbi_dashboard_1.png)
+
+![Power BI Dashboard 2](docs/assets/powerbi_dashboard_2.png)
 
 ## Problem
 
