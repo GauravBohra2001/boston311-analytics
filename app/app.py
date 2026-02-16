@@ -11,7 +11,7 @@ from uuid import uuid4
 # ============================================================
 st.set_page_config(page_title="Boston 311 Analytics (2024)", layout="wide")
 st.title("Boston 311 Analytics (2024)")
-st.caption("Data source: Boston 311 (2024). Last refreshed: March 2026.")
+st.caption("Data source: Boston 311 (2024). Last refreshed: February 2026.")
 
 # ------------------------------------------------------------
 # Session ID (unique per browser session)
@@ -193,16 +193,25 @@ if page == "Find My Area (ZIP)":
 # Small “What am I looking at?” blocks (students + recruiters)
 # ============================================================
 def info_block_city():
-    st.markdown(
-        """
-**What this is:** City-wide Boston 311 performance for the selected months in **2024**.  
-**How to use:** Use the left filters to change months; KPIs and trends update instantly.  
-**How to interpret:**
-- **SLA Compliance Rate** = % of eligible cases resolved within the target time (higher is better)
+    st.markdown("""
+### What is 311?
+
+Boston 311 is the city's public service request system.  
+Residents use it to report issues like potholes, trash pickup problems, broken streetlights, and other neighborhood concerns.
+
+This dashboard analyzes 2024 311 request performance across Boston.
+
+### How to Explore This Dashboard
+- Use the month selector on the left to compare seasonal trends.
+- Watch **SLA Compliance Rate** to see how reliably cases are resolved on time.
+- Check **Open Requests** to understand backlog pressure.
+- Use the monthly trends to see whether performance is improving or declining.
+
+### How to Interpret the KPIs
+- **SLA Compliance Rate** = % of eligible cases resolved within target time (higher is better)
 - **Open Requests** = unresolved cases (backlog signal)
 - **Median Resolution (hrs)** = typical time to close requests (lower is better)
-        """.strip()
-    )
+""".strip())
 
 def info_block_zip(zip_code: str):
     st.markdown(
