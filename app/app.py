@@ -570,7 +570,20 @@ with st.expander("How is Risk Classification calculated?"):
 - Comparison benchmark = city-wide weighted SLA.
     """)
 
+# ========================================================
+# Feedback Section (Lightweight & Professional)
+# ========================================================
 
+with st.expander("Feedback / Suggestions"):
+    st.write(
+        "If something feels confusing, inaccurate, or unclear, "
+        "please open an issue on GitHub."
+    )
+    st.write(
+        "GitHub Repository: "
+        "https://github.com/GauravBohra2001/boston311-analytics"
+    )
+    
 st.markdown("---")
 st.caption("Built by Gaurav Bohra • Data Engineering & Analytics Project")
 st.caption("Data source: Boston 311 (2024) • Last refreshed: March 2026")
