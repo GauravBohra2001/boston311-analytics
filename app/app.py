@@ -5,6 +5,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from uuid import uuid4
+from urllib.parse import parse_qsl, unquote, urlparse
 
 # ============================================================
 # Page config + lightweight styling
@@ -25,16 +26,84 @@ alt.data_transformers.disable_max_rows()
 # ============================================================
 # DB connection helpers
 # ============================================================
+def _secret_str(name: str, default: str | None = None) -> str | None:
+    if name not in st.secrets:
+        return default
+    value = st.secrets[name]
+    if value is None:
+        return default
+    text = str(value).strip()
+    return text or default
+
+
+def _build_conn_kwargs() -> dict:
+    database_url = _secret_str("DATABASE_URL")
+    if database_url:
+        parsed = urlparse(database_url)
+        if not parsed.hostname:
+            raise RuntimeError("DATABASE_URL is set but does not include a hostname.")
+
+        conn_kwargs = {
+            "host": parsed.hostname,
+            "dbname": parsed.path.lstrip("/") or "postgres",
+            "user": unquote(parsed.username) if parsed.username else None,
+            "password": unquote(parsed.password) if parsed.password else None,
+            "port": parsed.port or 5432,
+            "sslmode": "require",
+            "connect_timeout": 10,
+        }
+
+        for key, value in parse_qsl(parsed.query, keep_blank_values=False):
+            if key == "sslmode":
+                conn_kwargs["sslmode"] = value
+
+        return {k: v for k, v in conn_kwargs.items() if v is not None}
+
+    host = _secret_str("DB_HOST")
+    dbname = _secret_str("DB_NAME", "postgres")
+    user = _secret_str("DB_USER")
+    password = _secret_str("DB_PASSWORD")
+    sslmode = _secret_str("DB_SSLMODE", "require")
+
+    if not host:
+        raise RuntimeError(
+            "Missing database configuration. Set either DATABASE_URL or DB_HOST in Streamlit secrets."
+        )
+
+    if not user or not password:
+        raise RuntimeError(
+            "Incomplete database configuration. DB_USER and DB_PASSWORD must be set in Streamlit secrets."
+        )
+
+    port_text = _secret_str("DB_PORT")
+    if port_text:
+        try:
+            port = int(port_text)
+        except ValueError as exc:
+            raise RuntimeError(f"Invalid DB_PORT value: {port_text!r}.") from exc
+    else:
+        port = 6543 if "pooler.supabase.com" in host else 5432
+
+    return {
+        "host": host,
+        "dbname": dbname,
+        "user": user,
+        "password": password,
+        "port": port,
+        "sslmode": sslmode,
+        "connect_timeout": 10,
+    }
+
+
 def get_conn():
-    return psycopg2.connect(
-        host=st.secrets["DB_HOST"],
-        dbname=st.secrets["DB_NAME"],
-        user=st.secrets["DB_USER"],
-        password=st.secrets["DB_PASSWORD"],
-        port=st.secrets["DB_PORT"],
-        sslmode="require",
-        connect_timeout=10,
-    )
+    conn_kwargs = _build_conn_kwargs()
+    try:
+        return psycopg2.connect(**conn_kwargs)
+    except psycopg2.OperationalError as exc:
+        raise RuntimeError(
+            "Database connection failed. In Streamlit Cloud, verify the Supabase pooler host, "
+            "the port (usually 6543 for the pooler), the database name, user, password, and sslmode=require."
+        ) from exc
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_df(sql: str, params=None) -> pd.DataFrame:
