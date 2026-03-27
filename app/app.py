@@ -100,9 +100,19 @@ def get_conn():
     try:
         return psycopg2.connect(**conn_kwargs)
     except psycopg2.OperationalError as exc:
+        host = str(conn_kwargs.get("host", ""))
+        port = conn_kwargs.get("port", "")
+        direct_supabase_hint = ""
+        if host.endswith(".supabase.co") and "pooler.supabase.com" not in host:
+            direct_supabase_hint = (
+                " You appear to be using the direct Supabase host. "
+                "Try the Supabase pooler host instead."
+            )
         raise RuntimeError(
-            "Database connection failed. In Streamlit Cloud, verify the Supabase pooler host, "
-            "the port (usually 6543 for the pooler), the database name, user, password, and sslmode=require."
+            f"Database connection failed for host={host!r} port={port!r}. "
+            "Verify the Supabase host, port, database name, user, password, and sslmode=require. "
+            "For Supabase, the pooler usually uses port 6543."
+            f"{direct_supabase_hint}"
         ) from exc
 
 @st.cache_data(ttl=300, show_spinner=False)
