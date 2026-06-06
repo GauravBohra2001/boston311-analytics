@@ -41,16 +41,29 @@ City 311 data is large, messy, and difficult to interpret at scale. This system 
 
 Instead of building a static dashboard, this project builds a query-driven analytics layer backed by PostgreSQL.
 
+## Why This Architecture
+
+This project started as a local analytics build, then moved to hosted PostgreSQL so the app could serve live queries instead of shipping static screenshots or CSV-backed widgets.
+
+The first hosted version used Supabase. That worked functionally, but the free-tier pause behavior created a real operational problem for a portfolio app: after inactivity, visitors could hit a broken link until the database was manually resumed.
+
+The final production setup migrated to Neon because it preserved the PostgreSQL architecture while improving the operational story:
+- keep the query-driven warehouse model
+- keep SQL views as the analytical contract
+- keep Streamlit as the application layer
+- remove the weekly manual database resume problem
+- accept cold starts instead of hard downtime
+
 ## System Architecture
 ```
-Data Source → Python Cleaning → PostgreSQL (Supabase) → Analytical Views 
+Data Source → Python Cleaning → PostgreSQL (Neon) → Analytical Views 
 → Semantic Model (Power BI) → Streamlit Application → Streamlit Cloud
 ```
 
 ## Tech Stack
 
 - **Python (pandas)** — data cleaning
-- **PostgreSQL (Supabase)** — warehouse
+- **PostgreSQL (Neon, previously Supabase)** — warehouse
 - **SQL views** — analytical layer
 - **Power BI** — semantic modeling
 - **Streamlit** — application layer
@@ -60,11 +73,12 @@ Data Source → Python Cleaning → PostgreSQL (Supabase) → Analytical Views
 ## Core Engineering Decisions
 
 - Built analytical SQL views instead of querying raw tables
-- Hosted on Supabase (production-grade PostgreSQL)
+- Migrated from Supabase to Neon instead of rewriting around a file database
 - Implemented session-based logging (avoids Streamlit rerun inflation)
 - Managed secrets via Streamlit Cloud (no credentials in repo)
 - Normalized and validated ZIP codes
 - Separated raw data, analytical layer, and application layer
+- Added connection retry handling to tolerate managed Postgres cold starts
 
 ## Scale
 
@@ -87,7 +101,8 @@ Data Source → Python Cleaning → PostgreSQL (Supabase) → Analytical Views
 - Real-world data cleaning under messy conditions
 - Warehouse modeling in PostgreSQL
 - Analytical SQL design
-- Deployment debugging (Supabase + Streamlit)
+- Deployment debugging (managed Postgres + Streamlit)
+- Provider migration with minimal application-layer change
 - Logging architecture in reactive frameworks
 - Iterative engineering problem solving
 
@@ -101,7 +116,8 @@ streamlit run app/app.py
 ## Deployment Notes
 
 - Requires PostgreSQL views to be created (see /sql and /sql/views)
-- Database hosted on Supabase
+- Current hosted database: Neon
+- Previous hosted database: Supabase
 - Secrets managed via Streamlit Cloud
 - No credentials stored in repository
 
@@ -111,3 +127,4 @@ streamlit run app/app.py
 - [Security](SECURITY.md)
 - [Changelog](CHANGELOG.md)
 - [Power BI Semantic Model Details](SEMANTIC_MODEL.md)
+- [Neon Migration Guide](NEON_MIGRATION.md)

@@ -1,5 +1,14 @@
 # Change Log
 
+## Neon Migration
+
+- Migrated hosted PostgreSQL from Supabase to Neon
+- Chose provider migration instead of rewriting the application architecture
+- Used manual `pg_dump` / `pg_restore` after automatic import failed
+- Verified all app-critical `public.*` views and tables after restore
+- Switched Streamlit Cloud secrets to a pooled Neon `DATABASE_URL`
+- Added connection retry logic to handle cold-start wakeups more gracefully
+
 ## ZIP Corruption Issue
 
 - Discovered malformed ZIP values stored inside source

@@ -15,7 +15,9 @@ Azure Data Studio (local Postgres testing)
 VM + Power BI (semantic modeling)
         |
         v
-Supabase (PostgreSQL hosting)
+Managed PostgreSQL Hosting
+  - Supabase (initial hosted deployment)
+  - Neon (current production deployment)
         |
         v
 Analytical Views
@@ -32,7 +34,17 @@ Streamlit Cloud Deployment
 page_views logging (session_id + UUID tracking)
 ```
 
-## Migration to Supabase (Production Transition)
+## Hosting Evolution
+
+The project went through three distinct stages:
+
+1. Local data cleaning and warehouse design
+2. Initial cloud deployment on Supabase
+3. Production migration to Neon
+
+That evolution matters because the final architecture was shaped by both data-modeling needs and hosting constraints.
+
+## Initial Migration to Supabase
 
 The project originally began in a local development environment:
 1. Data extracted and cleaned in Python
@@ -40,7 +52,7 @@ The project originally began in a local development environment:
 3. Modeled inside a Windows VM using Power BI
 4. Semantic model validated KPI definitions and aggregations
 
-However, hosting constraints required a cloud-native solution.
+However, a public application needed a managed cloud database.
 
 ### Migration Steps
 
@@ -82,6 +94,54 @@ This resolved connectivity issues.
 - Session-based logging architecture
 
 This migration reflects real-world production debugging and deployment iteration.
+
+## Migration from Supabase to Neon
+
+The Supabase deployment worked technically, but it introduced a portfolio-hosting issue: the free-tier inactivity model could leave the public app showing a database error until the database was manually resumed.
+
+For a resume project, that failure mode is worse than a cold start. The project needed a hosted Postgres provider that:
+
+- preserved the existing SQL + `psycopg2` application design
+- did not require a database rewrite
+- reduced manual operational intervention
+- still fit within a free-tier budget
+
+### Why Neon
+
+Neon was chosen because it kept the PostgreSQL contract intact while improving the operational behavior:
+
+- same app-side connection model (`psycopg2`)
+- same `public.*` tables and views
+- pooled connection support for hosted apps
+- automatic wake-up behavior on the free tier
+- lower operational risk than a manually resumable free-tier database
+
+### Migration Steps
+
+1. Created a Neon project in `AWS US East 1`
+2. Attempted provider-side import from Supabase
+3. Fell back to manual `pg_dump` / `pg_restore` when automatic import failed
+4. Verified app-critical objects after restore:
+   - `public.cases_analytics_2024`
+   - `public.page_views`
+   - `public.v_kpi_monthly_city_2024`
+   - `public.v_kpi_monthly_zip_2024`
+   - `public.v_product_zip_latest_2024`
+   - `public.v_top5_issues_zip_monthly_2024`
+5. Switched Streamlit Cloud secrets to the Neon pooled `DATABASE_URL`
+6. Added retry logic in the app to tolerate cold-start wakeups
+
+### Migration Lesson
+
+The important engineering decision was to migrate the provider, not the architecture.
+
+That kept the project stable:
+- no dashboard rewrite
+- no analytics logic rewrite
+- no schema redesign
+- minimal application-code change
+
+The only unsupported restore objects were Supabase-specific extensions and realtime internals, which were not part of the Streamlit app contract.
 
 ---
 
@@ -187,7 +247,7 @@ Before hosting in Streamlit, a semantic model was built in Power BI.
 
 **Purpose:** Demonstrate dimensional modeling and DAX-based measure design
 
-This modeling experience influenced the SQL view design in Supabase.
+This modeling experience influenced the SQL view design in the hosted PostgreSQL layer.
 
 ---
 
@@ -239,21 +299,26 @@ Naive logging caused inflated counts.
 
 ## 7. Hosting Architecture
 
-**Database:** Supabase PostgreSQL  
+**Database:** Neon PostgreSQL  
 **App Hosting:** Streamlit Cloud
 
-### Issue Encountered
+### Current Runtime Behavior
 
-```
-Cannot assign requested address
-```
+- Streamlit Cloud hosts the application
+- Neon hosts the database
+- App queries run against prebuilt analytical views
+- Logging writes into `public.page_views`
 
-**Cause:** Direct host attempted IPv6 connection
+### Current Hosting Tradeoff
 
-**Resolution:** Switched to Supabase pooler host:
-```
-aws-0-us-west-2.pooler.supabase.com
-```
+Neon free-tier compute can cold start after inactivity, so the first request can be slower. That tradeoff is acceptable because it is materially better than a manually resumed database for a public portfolio project.
 
-Secrets configured via Streamlit Cloud TOML settings.
-```
+### Application Hardening
+
+The app connection layer now retries database connection attempts before surfacing a failure. This reduces visible errors during provider wake-up windows.
+
+### Operational Notes
+
+- Hosted secret source: Streamlit Cloud secrets
+- Local secret source: `.streamlit/secrets.toml` (gitignored)
+- Runtime connection preference: pooled connection string for hosted deployment

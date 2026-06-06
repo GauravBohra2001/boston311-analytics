@@ -4,6 +4,7 @@ import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from time import sleep
 from uuid import uuid4
 from urllib.parse import parse_qsl, unquote, urlparse
 
@@ -97,23 +98,36 @@ def _build_conn_kwargs() -> dict:
 
 def get_conn():
     conn_kwargs = _build_conn_kwargs()
-    try:
-        return psycopg2.connect(**conn_kwargs)
-    except psycopg2.OperationalError as exc:
-        host = str(conn_kwargs.get("host", ""))
-        port = conn_kwargs.get("port", "")
-        direct_supabase_hint = ""
-        if host.endswith(".supabase.co") and "pooler.supabase.com" not in host:
-            direct_supabase_hint = (
-                " You appear to be using the direct Supabase host. "
-                "Try the Supabase pooler host instead."
-            )
-        raise RuntimeError(
-            f"Database connection failed for host={host!r} port={port!r}. "
-            "Verify the Supabase host, port, database name, user, password, and sslmode=require. "
-            "For Supabase, the pooler usually uses port 6543."
-            f"{direct_supabase_hint}"
-        ) from exc
+    last_error = None
+    for attempt in range(3):
+        try:
+            return psycopg2.connect(**conn_kwargs)
+        except psycopg2.OperationalError as exc:
+            last_error = exc
+            if attempt < 2:
+                sleep(2)
+
+    host = str(conn_kwargs.get("host", ""))
+    port = conn_kwargs.get("port", "")
+    direct_supabase_hint = ""
+    neon_pooler_hint = ""
+    if host.endswith(".supabase.co") and "pooler.supabase.com" not in host:
+        direct_supabase_hint = (
+            " You appear to be using the direct Supabase host. "
+            "Try the Supabase pooler host instead."
+        )
+    if ".neon.tech" in host and "-pooler." not in host:
+        neon_pooler_hint = (
+            " For Neon-hosted apps, prefer the pooled connection string "
+            "so cold starts and concurrent requests are handled more gracefully."
+        )
+
+    raise RuntimeError(
+        f"Database connection failed for host={host!r} port={port!r}. "
+        "Verify the database host, port, database name, user, password, and sslmode=require."
+        " If the database was idle, retrying after the compute wakes up may resolve the issue."
+        f"{direct_supabase_hint}{neon_pooler_hint}"
+    ) from last_error
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_df(sql: str, params=None) -> pd.DataFrame:
