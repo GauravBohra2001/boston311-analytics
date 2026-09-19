@@ -1,0 +1,18 @@
+{
+  "duration": 21.84,
+  "assertions": [
+    { "kind": "appearsBy", "selector": "#hook-number", "bySec": 1.1 },
+    { "kind": "appearsBy", "selector": "#city-caption", "bySec": 4.8 },
+    { "kind": "appearsBy", "selector": "#zip-scene-label", "bySec": 9.3 },
+    { "kind": "appearsBy", "selector": "#zip-status", "bySec": 12.2 },
+    { "kind": "appearsBy", "selector": "#zip-issues", "bySec": 14.3 },
+    { "kind": "appearsBy", "selector": "#lockup-panel", "bySec": 18.3 },
+    { "kind": "before", "a": "#hook-number", "b": "#city-caption" },
+    { "kind": "before", "a": "#city-caption", "b": "#zip-status" },
+    { "kind": "before", "a": "#zip-status", "b": "#zip-issues" },
+    { "kind": "before", "a": "#zip-issues", "b": "#lockup-panel" },
+    { "kind": "staysInFrame", "selector": ".lockup-title" },
+    { "kind": "staysInFrame", "selector": "#zip-status" },
+    { "kind": "keepsMoving", "withinSelector": "#root", "maxStaticSec": 2.2 }
+  ]
+}
